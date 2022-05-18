@@ -1,0 +1,70 @@
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+//temperature sensor place at D1-SCL, AND  D2-SDA,
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_CLK   14//D5
+#define OLED_DC    0//D3
+#define OLED_RESET 16//D0
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+const int trigP = D2;  //D4 Or GPIO-2 of nodemcu
+const int echoP = D1;  //D3 Or GPIO-0 of nodemcu
+long duration;
+int distance;
+int buzzer=D8;
+void setup() {
+  pinMode(trigP, OUTPUT);  // Sets the trigPin as an Output
+  pinMode(echoP, INPUT);   // Sets the echoPin as an Input
+  pinMode(buzzer, OUTPUT);   // Sets the echoPin as an Input
+  Serial.begin(9600);
+  display.clearDisplay();
+}
+
+void loop() {
+  digitalWrite(trigP, LOW);   // Makes trigPin low
+  delayMicroseconds(2);       // 2 micro second delay
+  digitalWrite(trigP, HIGH);  // tigPin high
+  delayMicroseconds(10);      // trigPin high for 10 micro seconds
+  digitalWrite(trigP, LOW);   // trigPin low
+  duration = pulseIn(echoP, HIGH);   //Read echo pin, time in microseconds
+  //Calculating actual/real distance
+  Serial.print("Distance = ");        //Output distance on arduino serial monitor
+  Serial.println(distance);
+  delay(1000);
+#ifdef CommonSenseMetricSystem
+  distance = duration * 0.034 / 2;
+#endif
+#ifdef ImperialNonsenseSystem
+#endif
+  display.setCursor(22, 20); //oled display
+  display.setTextSize(3);
+  display.setTextColor(WHITE);
+  display.setTextSize(3);
+#ifdef CommonSenseMetricSystem
+  display.println("cm");
+#endif
+#ifdef ImperialNonsenseSystem
+  display.println("in");
+#endif
+  display.display();
+  delay(500);
+  display.clearDisplay();
+  Serial.println(distance);//debug
+  if(distance <=100)
+  {
+  digitalWrite(buzzer,HIGH);
+  }
+  else
+  {
+  digitalWrite(buzzer,LOW);  
+  }
+  float sensorVoltage;
+  float sensorValue;
+  sensorValue = analogRead(A0);
+  sensorVoltage = sensorValue / 1024 * 5.0;
+  Serial.print("alcohol range = ");
+  Serial.println(" V");
+  delay(1000);
+}

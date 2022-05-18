@@ -1,0 +1,113 @@
+#include <ESP8266WiFi.h>                                                    // esp8266 library
+#include <espnow.h>
+#include <SparkFunMLX90614.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_MOSI  13//D7
+#define OLED_CLK   14//D5
+#define OLED_DC    0//D3
+#define OLED_CS    2//D4
+#define OLED_RESET 16//D0
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+const int trigPin = D1;  //D4
+const int echoPin = D2;  //D3
+const int trigPin1 = D6;  //D4
+const int echoPin1 = D8;  //D3
+int buzzer = 10;
+long duration;
+int distance;
+long duration1;
+int distance1;
+typedef struct test_struct {
+  String VehicleNo;
+} test_struct;
+test_struct myData;
+void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
+  memcpy(&myData, incomingData, sizeof(myData));
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.VehicleNo);
+  Serial.println();
+}
+void setup() {
+  Serial.println(buzzer, OUTPUT);
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  pinMode(trigPin1, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin1, INPUT); // Sets the echoPin as an Input
+  display.begin(SSD1306_SWITCHCAPVCC);
+  display.clearDisplay();
+  Serial.begin(115200);
+  delay(500);
+  if (esp_now_init() != 0) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
+  esp_now_register_recv_cb(OnDataRecv);
+}
+void loop() {
+  int distance;
+  display.setCursor(30, 0); //oled display
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.println("SPEED BREAK");
+  display.setCursor(10, 20); //oled display
+  display.setTextSize(2);
+   display.setTextColor(WHITE);
+  display.println(distance_cm);
+  display.setCursor(90, 20);
+  display.setTextSize(2);
+  display.println("cm");
+  display.setCursor(10, 45); //oled display
+   display.setTextSize(2);
+   display.setTextColor(WHITE);
+  display.println(distance_in);
+   display.setCursor(90, 45);
+   display.setTextSize(2);
+  display.println("in");
+  display.display();
+  delay(500);
+  display.clearDisplay();
+  Serial.println(distance_cm);
+  Serial.println(distance_in);
+  digitalWrite(trigPin1, LOW); //
+  digitalWrite(trigPin1, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin1, LOW);
+  duration1 = pulseIn(echoPin1, HIGH);
+  distance_cm1 = (duration1 / 2) / 29.1;
+  distance_in1 = (duration1 / 2) / 73.914;
+  display.setTextColor(WHITE);
+  display.println(distance_cm1);
+  display.setCursor(90, 20);
+  display.setTextSize(2);
+  display.println("cm");
+  display.setCursor(10, 45); //oled display
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.println(distance_in1);
+  display.setCursor(90, 45);
+  display.setTextSize(2);
+  display.println("in");
+  display.display();
+  delay(500);
+  display.clearDisplay();
+  Serial.println(distance_cm1);
+  Serial.println(distance_in1);
+  display.println(myData.VehicleNo);
+  if (distance_cm <= 10)
+  {
+    digitalWrite(buzzer, HIGH);
+    delay(1000);
+  }
+  else
+  {
+    digitalWrite(buzzer, LOW);
+    delay(1000);
+  }
+}

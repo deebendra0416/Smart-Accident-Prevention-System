@@ -1,0 +1,105 @@
+#include <ESP8266WiFi.h>
+#include <ArduinoJson.h>// esp8266 library
+#include <Arduino.h>
+#include <espnow.h>                                                        
+#define HOST "location-trackin-1564037843787.firebaseio.com"                    
+#define AUTH "jXyWfDDX2BooHVcPPNlETJPuLLJOhLN0bhDyKKB5"           
+#define WIFI_SSID "IOT LAB"                                            
+#define WIFI_PASSWORD "IoT$2020"
+String jsonString;//password of wifi ssid
+typedef struct test_struct {
+  String VehicleNo1;
+  String OwnerName1;
+  String phoneNumber1;
+  String VehicleType1;
+  String CarryItems1;
+  double latitude;
+  double longitude;
+  double tolatitude;
+  double tolongitude;
+  double checklatitude1;
+  double checklongitude1;
+  double checklatitude2;
+  double checklongitude2;
+  double checklatitude3;
+  double checklongitude3;
+} test_struct;
+test_struct myData;
+const size_t capacity = JSON_OBJECT_SIZE(10);
+DynamicJsonBuffer jsonBuffer(capacity);
+JsonObject& root = jsonBuffer.createObject();
+void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
+  memcpy(&myData, incomingData, sizeof(myData));
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.VehicleNo1);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.OwnerName1);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.VehicleType1);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.phoneNumber1);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.CarryItems1);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.checklatitude2);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.println(myData.checklongitude2);
+  Serial.println();
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);                                     //try to connect with wifi
+  Serial.print("Connecting to ");
+  Serial.print(WIFI_SSID);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println();
+  Serial.print("Connected to ");
+  Serial.println(WIFI_SSID);
+  Serial.print("IP Address is : ");
+  Serial.println(WiFi.localIP());                                            //print local IP address
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  Init ESP - NOW
+  if (esp_now_init() != 0) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
+  esp_now_register_recv_cb(OnDataRecv);
+}
+void loop() {
+  Firebase.pushString("AS01BG7777", myData.VehicleNo1);
+  Firebase.pushString("AS01BG7777", myData.OwnerName1);
+  Firebase.pushString("AS01BG7777", myData.phoneNumber1);
+  Firebase.pushString("AS01BG7777", myData.VehicleType1);
+  Firebase.pushString("AS01BG7777", myData.CarryItems1);
+  Firebase.pushString("AS01BG7777", myData.StartPoint1);
+  Firebase.pushString("AS01BG7777", myData.Destination1);
+  Firebase.pushString("AS01BG7777", myData.latitude1);
+  Firebase.pushString("AS01BG7777", myData.longitude1);
+  delay(15000);
+}
